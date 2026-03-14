@@ -1,0 +1,35 @@
+# macOS
+.DS_Store
+
+# R build artifacts
+*.Rcheck/
+*.tar.gz
+*.tgz
+Rplots.pdf
+
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+
+# Compiled code (src/)
+*.o
+*.so
+*.dll
+
+# Vignette build outputs
+vignettes/*.html
+vignettes/*.pdf
+
+# Python
+__pycache__/
+.ipynb_checkpoints/
+
+# Dev-only directories (not part of the package)
+output/
+examples/
+
+# Claude Code local settings
+.claude/
+/doc/
+/Meta/

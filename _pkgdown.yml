@@ -1,0 +1,54 @@
+template:
+  bootstrap: 5
+
+home:
+  title: panelforest
+  description: Tidy-style forest plots with declarative layouts and modular panels.
+
+navbar:
+  structure:
+    left: [reference, articles, news]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: Getting Started
+        href: articles/getting-started.html
+      - text: Classic Forest Plot
+        href: articles/classic-forest-plot.html
+    news:
+      text: News
+      href: news/index.html
+
+reference:
+- title: Plot Construction
+  contents:
+  - forest_plot
+  - fp_layout
+  - fp_render
+  - fp_size
+- title: Panels
+  contents:
+  - fp_text
+  - fp_text_ci
+  - fp_gap
+  - fp_bar
+  - fp_dot
+  - fp_ci
+  - fp_custom
+- title: Structure and Styling
+  contents:
+  - add_stripe
+  - add_summary_rows
+  - add_group_rows
+  - add_row_style
+  - fp_hline
+  - fp_theme_default
+  - fp_theme_journal
+- title: Helpers
+  contents:
+  - fp_fmt_number
+  - fp_fmt_percent
+  - fp_fmt_pvalue
+  - panelforest_example_data
+  - fp_register

@@ -1,0 +1,208 @@
+## ----setup, include = FALSE---------------------------------------------------
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  fig.align = "center"
+)
+library(panelforest)
+library(ggplot2)
+
+## ----minimal, fig.width = 6.5, fig.height = 2.2-------------------------------
+df <- data.frame(
+  label = c("Overall", "Age < 65", "Age >= 65", "Male", "Female"),
+  HR    = c(0.72, 0.65, 0.81, 0.69, 0.78),
+  LCI   = c(0.58, 0.48, 0.60, 0.51, 0.56),
+  UCI   = c(0.89, 0.88, 1.09, 0.93, 1.08)
+)
+
+forest_plot(df) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI",
+         header = "Hazard Ratio", trans = "log",
+         xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5),
+         show_axis = TRUE, width = 3) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----text-align, fig.width = 5, fig.height = 2.2------------------------------
+forest_plot(df) |>
+  add_text("label", header = "Subgroup",     align = "left",   width = 2.0) |>
+  add_text("HR",    header = "HR (point)",   align = "center", width = 1.2) |>
+  add_ci("HR", "LCI", "UCI",
+         header = "Forest", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5),
+         breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  fp_render()
+
+## ----text-ci, fig.width = 6, fig.height = 2.2---------------------------------
+forest_plot(df) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "HR", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)",
+              digits = 2, width = 1.8) |>
+  fp_render()
+
+## ----bar, fig.width = 6, fig.height = 2.2-------------------------------------
+df2 <- df
+df2$n <- c(247, 128, 119, 143, 104)
+
+forest_plot(df2) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_bar("n", header = "N", width = 1.2, fill = "#7eb8a2") |>
+  add_ci("HR", "LCI", "UCI", header = "HR", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  fp_render()
+
+## ----dot, fig.width = 6, fig.height = 2.2-------------------------------------
+df3 <- df2
+df3$diff   <- c(-0.32, -0.41, -0.20, -0.35, -0.28)
+df3$diff_l <- c(-0.55, -0.68, -0.48, -0.57, -0.54)
+df3$diff_u <- c(-0.09, -0.14,  0.08, -0.13, -0.02)
+
+forest_plot(df3) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_dot("diff", lower = "diff_l", upper = "diff_u",
+          header = "Mean Diff.", ref_line = 0,
+          colour = "#2563eb", fill = "#bfdbfe", shape = 21,
+          breaks = c(-0.8, -0.4, 0, 0.4), width = 2.5) |>
+  add_ci("HR", "LCI", "UCI", header = "HR", trans = "log", width = 2.5,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  fp_render()
+
+## ----gap-spacer, fig.width = 6.5, fig.height = 2.2----------------------------
+forest_plot(df) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_gap(width = 0.15) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_spacer(width = 4, unit = "mm") |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----stripes, fig.width = 6.5, fig.height = 2.2-------------------------------
+forest_plot(df) |>
+  add_stripe(c("#ffffff", "#f5f7fa")) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----summary, fig.width = 6.5, fig.height = 2.2-------------------------------
+forest_plot(df) |>
+  add_stripe(c("#ffffff", "#f5f7fa")) |>
+  add_summary(1) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----group, fig.width = 6.5, fig.height = 3.0---------------------------------
+df_grp <- data.frame(
+  label = c("Overall", "Age", "  < 65", "  >= 65", "Sex", "  Male", "  Female"),
+  HR    = c(0.72, NA,  0.65,  0.81, NA,  0.69, 0.78),
+  LCI   = c(0.58, NA,  0.48,  0.60, NA,  0.51, 0.56),
+  UCI   = c(0.89, NA,  0.88,  1.09, NA,  0.93, 1.08)
+)
+
+forest_plot(df_grp) |>
+  add_stripe(c("#ffffff", "#f5f7fa")) |>
+  add_summary(1) |>
+  add_group(c(2, 5), fill = "#f0f4f8") |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----hline, fig.width = 6.5, fig.height = 3.0---------------------------------
+forest_plot(df_grp) |>
+  add_stripe(c("#ffffff", "#f5f7fa")) |>
+  add_summary(1) |>
+  add_group(c(2, 5), fill = "#f0f4f8") |>
+  add_hline(1, colour = "#9ca3af", linewidth = 0.6) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----edit, fig.width = 6.5, fig.height = 2.2----------------------------------
+forest_plot(df) |>
+  add_stripe(c("#ffffff", "#f5f7fa")) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  # row-level: bold + taller overall row
+  edit(row = 1, fontface = "bold", height = 0.55) |>
+  # cell-level: blue diamond for overall CI
+  edit(row = 1, panel = "Hazard Ratio",
+       glyph = "diamond", fill = "#3b82f6", colour = "#1e40af") |>
+  fp_render()
+
+## ----themes, fig.width = 6.5, fig.height = 2.2--------------------------------
+# Journal theme: serif font, slightly smaller text
+forest_plot(df, theme = fp_theme_journal()) |>
+  add_stripe(c("#ffffff", "#f0f0f0")) |>
+  add_summary(1) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----custom-theme, fig.width = 6.5, fig.height = 2.2--------------------------
+my_theme <- fp_theme_default(
+  text_colour    = "#1e293b",
+  header_colour  = "#0f172a",
+  refline_colour = "#94a3b8",
+  text_size      = 3.5,
+  plot_margin    = 5
+)
+
+forest_plot(df, theme = my_theme) |>
+  add_stripe(c("#ffffff", "#f8fafc")) |>
+  add_summary(1) |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  fp_render()
+
+## ----formatters, fig.width = 7, fig.height = 2.2------------------------------
+df4 <- df2
+df4$rate <- c(0.486, 0.391, 0.588, 0.452, 0.532)
+df4$pval <- c(0.001, 0.003, 0.062, 0.008, 0.098)
+
+forest_plot(df4) |>
+  add_text("label",  header = "Subgroup",      width = 2.0) |>
+  add_text("n",      header = "N",             width = 0.7,
+           formatter = fp_fmt_number(digits = 0), align = "right") |>
+  add_text("rate",   header = "Rate",          width = 0.8,
+           formatter = fp_fmt_percent(digits = 1), align = "right") |>
+  add_text("pval",   header = "P-value",       width = 0.9,
+           formatter = fp_fmt_pvalue(digits = 3), align = "right") |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  fp_render()
+
+## ----save, eval = FALSE-------------------------------------------------------
+# plot_obj <- forest_plot(df) |>
+#   add_text("label", header = "Subgroup", width = 2) |>
+#   add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+#          show_axis = TRUE)
+# 
+# size <- fp_size(plot_obj)
+# 
+# ggplot2::ggsave(
+#   "forest.png",
+#   plot   = fp_render(plot_obj),
+#   width  = size["width"],
+#   height = size["height"],
+#   dpi    = 300,
+#   bg     = "white"
+# )
+

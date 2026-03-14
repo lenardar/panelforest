@@ -1,0 +1,15 @@
+^\.DS_Store$
+^.*\.Rcheck$
+^.*\.tar\.gz$
+^\.gitignore$
+^_pkgdown\.yml$
+^tools$
+^docs$
+^examples$
+^output$
+^cran-comments\.md$
+^RELEASE\.md$
+^\.claude$
+^README\.zh\.md$
+^doc$
+^Meta$

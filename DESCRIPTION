@@ -1,0 +1,31 @@
+Package: panelforest
+Title: Declarative and Modular Forest Plots
+Version: 0.2.0
+Author: Zhiyuan Xu [aut, cre]
+Maintainer: Zhiyuan Xu <hangzhouliuhaoran@163.com>
+Authors@R: c(person("Zhiyuan", "Xu", email = "hangzhouliuhaoran@163.com", role = c("aut", "cre")))
+Description: Create tidy-style forest plots with declarative layouts,
+    modular panel builders, and composable rendering based on 'ggplot2'
+    and 'patchwork'. The package supports text, bar, dot, and confidence
+    interval panels together with row-level structural controls such as
+    stripes, group rows, summary rows, and horizontal separators.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Depends:
+    R (>= 4.1.0)
+Imports:
+    ggplot2,
+    grid,
+    patchwork,
+    rlang
+Suggests:
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    vdiffr
+VignetteBuilder:
+    knitr
+Config/testthat/edition: 3
+NeedsCompilation: no
