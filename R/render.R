@@ -54,7 +54,7 @@ fp_render <- function(x) {
   if (length(x$header_groups)) {
     .validate_header_groups(x$header_groups, length(specs))
     assembly <- .header_group_assembly(panels, x$header_groups, specs, x$theme, x$header_height)
-    patchwork::wrap_plots(assembly$plots) +
+    composed <- patchwork::wrap_plots(assembly$plots) +
       patchwork::plot_layout(
         design = assembly$design,
         widths = assembly$widths,
@@ -62,10 +62,12 @@ fp_render <- function(x) {
       ) +
       plot_margin_theme
   } else {
-    patchwork::wrap_plots(panels, nrow = 1) +
+    composed <- patchwork::wrap_plots(panels, nrow = 1) +
       patchwork::plot_layout(widths = .panel_layout_widths(specs)) +
       plot_margin_theme
   }
+
+  composed
 }
 
 fp_size <- function(x) {

@@ -334,13 +334,15 @@
       log_ref <- log10(spec$ref_line)
       log_lo  <- log10(display_limits[1])
       log_hi  <- log10(display_limits[2])
-      arrow_left_x  <- 10^(log_ref - favors_span * (log_ref - log_lo))
-      arrow_right_x <- 10^(log_ref + favors_span * (log_hi - log_ref))
+      half_span <- min(log_ref - log_lo, log_hi - log_ref)
+      arrow_left_x  <- 10^(log_ref - favors_span * half_span)
+      arrow_right_x <- 10^(log_ref + favors_span * half_span)
     } else {
       left_half  <- spec$ref_line - display_limits[1]
       right_half <- display_limits[2] - spec$ref_line
-      arrow_left_x  <- spec$ref_line - favors_span * left_half
-      arrow_right_x <- spec$ref_line + favors_span * right_half
+      half_span <- min(left_half, right_half)
+      arrow_left_x  <- spec$ref_line - favors_span * half_span
+      arrow_right_x <- spec$ref_line + favors_span * half_span
     }
 
     # Compute arrow start points (with optional gap)
@@ -348,11 +350,11 @@
     if (!isFALSE(favors_gap)) {
       gap_frac <- if (isTRUE(favors_gap)) FAVORS_GAP_DEFAULT else favors_gap
       if (identical(spec$trans, "log")) {
-        arrow_start_left  <- 10^(log_ref - gap_frac * (log_ref - log_lo))
-        arrow_start_right <- 10^(log_ref + gap_frac * (log_hi - log_ref))
+        arrow_start_left  <- 10^(log_ref - gap_frac * half_span)
+        arrow_start_right <- 10^(log_ref + gap_frac * half_span)
       } else {
-        arrow_start_left  <- spec$ref_line - gap_frac * left_half
-        arrow_start_right <- spec$ref_line + gap_frac * right_half
+        arrow_start_left  <- spec$ref_line - gap_frac * half_span
+        arrow_start_right <- spec$ref_line + gap_frac * half_span
       }
     } else {
       arrow_start_left  <- spec$ref_line
@@ -372,9 +374,9 @@
         ) +
         ggplot2::annotate(
           "text",
-          x = spec$ref_line, y = -FAVORS_TEXT_Y_OFFSET,
+          x = arrow_start_left, y = -FAVORS_TEXT_Y_OFFSET,
           label = spec$favors_left,
-          hjust = 1.08,
+          hjust = 1.05,
           size = ctx$theme$text_size,
           colour = ctx$theme$text_colour,
           family = ctx$theme$base_family
@@ -393,9 +395,9 @@
         ) +
         ggplot2::annotate(
           "text",
-          x = spec$ref_line, y = -FAVORS_TEXT_Y_OFFSET,
+          x = arrow_start_right, y = -FAVORS_TEXT_Y_OFFSET,
           label = spec$favors_right,
-          hjust = -0.08,
+          hjust = -0.05,
           size = ctx$theme$text_size,
           colour = ctx$theme$text_colour,
           family = ctx$theme$base_family
