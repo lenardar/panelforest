@@ -148,3 +148,16 @@ forest_plot(df) |>
 ## Status
 
 Pre-release (v0.2.0). API may change before v1.0.
+
+## Roadmap
+
+Features planned for future releases:
+
+- **`forest_plot_from()` — model-to-plot pipeline.** Pass a fitted model object and get a forest plot directly. Auto-detects model type (logistic → OR, Cox → HR, linear → β) and calls `broom::tidy()` under the hood. Gradually expanding model support: `glm`, `coxph`, `lm`, `lme4`, `metafor::rma`, `brms`, and more.
+- **`add_rule()` — conditional styling.** Declare rules like `add_rule(when = ~ p.value < 0.05, colour = "red")` to highlight rows by data conditions instead of manually calling `edit()` row by row.
+- **More scale transformations.** Extend `trans` beyond `"identity"` and `"log"` to include `"sqrt"`, `"logit"`, and others.
+- **Text wrapping.** Auto-wrap long labels in `fp_text()` via a `wrap` parameter, with automatic row height adjustment.
+- **`fp_save()` — export helper.** One-liner combining `fp_render()`, `fp_size()`, and `ggsave()` with sensible defaults.
+- **`fp_pair()` — numeric pair column.** Display "events/total" or "n (percent)" directly from two data columns.
+- **Column-level styling.** Apply background fills or borders to entire columns via `edit()`.
+- **Footnote system.** `add_footnote()` to append source notes and abbreviations below the plot.
