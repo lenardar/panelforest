@@ -102,6 +102,13 @@ size <- fp_size(plot_obj)
 ggplot2::ggsave("forest.png", fp_render(plot_obj), width = size["width"], height = size["height"])
 ```
 
+或使用 `fp_save()` 一行搞定（支持 `dpi`、`scale` 及其他 `ggsave()` 参数）：
+
+```r
+fp_save(plot_obj, "forest.png")
+fp_save(plot_obj, "forest.png", dpi = 600)
+```
+
 `fp_gap()` 用于相对比例间距，`fp_spacer()` 用于固定物理间距。
 
 ## 跨列分组标题
@@ -139,7 +146,7 @@ forest_plot(df) |>
 
 | 类别     | 函数                                                                                          |
 | -------- | --------------------------------------------------------------------------------------------- |
-| 布局     | `forest_plot()`, `fp_render()`, `fp_size()`                                             |
+| 布局     | `forest_plot()`, `fp_render()`, `fp_size()`, `fp_save()`                                             |
 | 文本面板 | `fp_text()`, `fp_text_ci()`                                                               |
 | 数值面板 | `fp_bar()`, `fp_dot()`, `fp_ci()`                                                       |
 | 结构面板 | `fp_gap()`（相对间距）, `fp_spacer()`（固定间距）                                         |
@@ -162,7 +169,6 @@ forest_plot(df) |>
 - **`add_rule()` — 条件样式。** 声明式规则，如 `add_rule(when = ~ p.value < 0.05, colour = "red")`，按数据条件批量高亮行，替代逐行 `edit()`。
 - **更多坐标变换。** `trans` 参数扩展支持 `"sqrt"`、`"logit"` 等变换。
 - **文本自动换行。** `fp_text()` 增加 `wrap` 参数，超长标签自动折行并调整行高。
-- **`fp_save()` — 导出助手。** 一行代码完成 `fp_render()` + `fp_size()` + `ggsave()`，开箱即用。
 - **`fp_pair()` — 数值对列。** 直接从两个数据列生成 "事件数/总数" 或 "n (%)" 格式的面板。
 - **列级样式。** 通过 `edit()` 对整列施加背景色或边框。
 - **脚注系统。** `add_footnote()` 在图底部追加来源说明和缩略语注释。

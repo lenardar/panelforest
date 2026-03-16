@@ -100,6 +100,13 @@ size <- fp_size(plot_obj)
 ggplot2::ggsave("forest-with-spacer.png", fp_render(plot_obj), width = size["width"], height = size["height"])
 ```
 
+Or use `fp_save()` for a one-liner (supports `dpi`, `scale`, and other `ggsave()` arguments):
+
+```r
+fp_save(plot_obj, "forest-with-spacer.png")
+fp_save(plot_obj, "forest-with-spacer.png", dpi = 600)
+```
+
 `fp_gap()` is still available when you want a relative layout column. `fp_spacer()` is better when you want fixed physical whitespace.
 
 ## Spanning Header Groups
@@ -135,7 +142,7 @@ forest_plot(df) |>
 
 ## Available Building Blocks
 
-- Layout: `forest_plot()`, `fp_render()`, `fp_size()`
+- Layout: `forest_plot()`, `fp_render()`, `fp_size()`, `fp_save()`
 - Text: `fp_text()`, `fp_text_ci()`
 - Quantitative panels: `fp_bar()`, `fp_dot()`, `fp_ci()`
 - Structure panels: `fp_gap()` for relative gaps, `fp_spacer()` for absolute whitespace
@@ -157,7 +164,6 @@ Features planned for future releases:
 - **`add_rule()` — conditional styling.** Declare rules like `add_rule(when = ~ p.value < 0.05, colour = "red")` to highlight rows by data conditions instead of manually calling `edit()` row by row.
 - **More scale transformations.** Extend `trans` beyond `"identity"` and `"log"` to include `"sqrt"`, `"logit"`, and others.
 - **Text wrapping.** Auto-wrap long labels in `fp_text()` via a `wrap` parameter, with automatic row height adjustment.
-- **`fp_save()` — export helper.** One-liner combining `fp_render()`, `fp_size()`, and `ggsave()` with sensible defaults.
 - **`fp_pair()` — numeric pair column.** Display "events/total" or "n (percent)" directly from two data columns.
 - **Column-level styling.** Apply background fills or borders to entire columns via `edit()`.
 - **Footnote system.** `add_footnote()` to append source notes and abbreviations below the plot.

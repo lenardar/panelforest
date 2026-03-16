@@ -76,6 +76,19 @@ fp_size <- function(x) {
   .fp_device_size(x)
 }
 
+fp_save <- function(x, filename, width = NULL, height = NULL, dpi = 300, scale = 1, ...) {
+  .validate_fp_plot(x)
+
+  size <- .fp_device_size(x)
+  width  <- width  %||% unname(size["width"])
+  height <- height %||% unname(size["height"])
+
+  rendered <- fp_render(x)
+  ggplot2::ggsave(filename, rendered, width = width, height = height, dpi = dpi, scale = scale, ...)
+
+  invisible(filename)
+}
+
 print.fp_plot <- function(x, ...) {
   if (!length(x$specs)) {
     cat(

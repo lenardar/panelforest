@@ -762,3 +762,46 @@ test_that("fp_ci arrow parameters are validated and stored", {
   expect_error(fp_ci("est", "lwr", "upr", arrow_angle = 0), "\\(0, 90\\)")
   expect_error(fp_ci("est", "lwr", "upr", arrow_angle = 90), "\\(0, 90\\)")
 })
+
+test_that("fp_save writes a file with correct dimensions", {
+  df <- data.frame(
+    label = c("A", "B"),
+    est = c(0.9, 1.3),
+    lwr = c(0.7, 1.0),
+    upr = c(1.1, 1.7)
+  )
+
+  plot_obj <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_ci("est", "lwr", "upr", header = "HR")
+
+  tmp <- tempfile(fileext = ".png")
+  on.exit(unlink(tmp), add = TRUE)
+
+  result <- fp_save(plot_obj, tmp)
+  expect_true(file.exists(tmp))
+  expect_equal(result, tmp)
+})
+
+test_that("fp_save accepts custom width and height", {
+  df <- data.frame(
+    label = c("A", "B"),
+    est = c(0.9, 1.3),
+    lwr = c(0.7, 1.0),
+    upr = c(1.1, 1.7)
+  )
+
+  plot_obj <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_ci("est", "lwr", "upr", header = "HR")
+
+  tmp <- tempfile(fileext = ".png")
+  on.exit(unlink(tmp), add = TRUE)
+
+  expect_no_error(fp_save(plot_obj, tmp, width = 10, height = 5))
+  expect_true(file.exists(tmp))
+})
+
+test_that("fp_save rejects non-fp_plot input", {
+  expect_error(fp_save(list(), tempfile()), class = "rlang_error")
+})
