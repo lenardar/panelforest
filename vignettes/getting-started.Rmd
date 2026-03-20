@@ -234,6 +234,51 @@ its integer index.
 
 ---
 
+## Numeric pair columns — `fp_pair()`
+
+`fp_pair()` formats two or more numeric columns into a single text column.
+Three modes are available: `"fraction"` (default), `"percent"`, and a custom
+function.
+
+```{r pair, fig.width = 7.5, fig.height = 2.2}
+df_pair <- df2   # df2 has an "n" column
+df_pair$events <- c(120L, 58L, 62L, 66L, 54L)
+
+forest_plot(df_pair) |>
+  add_text("label", header = "Subgroup", width = 1.8) |>
+  add_pair(c("events", "n"),
+           header = "Events/N", digits = 0, width = 0.9) |>
+  add_pair(c("events", "n"),
+           format = "percent", header = "Events (%)",
+           digits = 0, pct_digits = 1, width = 1.1) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 2.5,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  fp_render()
+```
+
+For full control pass a function — it receives the data frame and the `cols`
+character vector:
+
+```{r pair-custom, eval = FALSE}
+add_pair(
+  c("events", "n"),
+  format = function(data, cols) {
+    paste0(data[[cols[1]]], " of ", data[[cols[2]]])
+  },
+  header = "Events"
+)
+```
+
+`digits` is recycled to `length(cols)`, so each column can have its own
+decimal places:
+
+```{r pair-digits, eval = FALSE}
+# "3.4 ± 0.56"
+add_pair(c("mean", "sd"), format = "fraction", sep = " ± ", digits = c(1, 2))
+```
+
+---
+
 ## Conditional styling — `add_rule()`
 
 `add_rule()` is the declarative alternative to looking up row indices and

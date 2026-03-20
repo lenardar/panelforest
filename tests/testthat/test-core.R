@@ -802,6 +802,95 @@ test_that("fp_save accepts custom width and height", {
   expect_true(file.exists(tmp))
 })
 
+# ── fp_pair() / add_pair() ────────────────────────────────────────────────────
+
+.pair_df <- function() {
+  data.frame(
+    label  = c("A", "B", "C"),
+    events = c(42L, 18L, NA_integer_),
+    total  = c(100L, 46L, 54L),
+    x      = c(1.1, 2.2, 3.3),
+    y      = c(10.0, 20.0, 30.0)
+  )
+}
+
+test_that("fp_pair() fraction mode formats correctly", {
+  df <- .pair_df()
+  rendered <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_pair(c("events", "total"), header = "E/N", digits = 0) |>
+    fp_render()
+  p_data <- ggplot2::ggplot_build(rendered[[2]])$data[[1]]
+  expect_equal(p_data$label[1], "42/100")
+  expect_equal(p_data$label[2], "18/46")
+  expect_equal(p_data$label[3], "")    # NA → na = ""
+})
+
+test_that("fp_pair() percent mode formats correctly", {
+  df <- .pair_df()
+  rendered <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_pair(c("events", "total"), format = "percent",
+             digits = 0, pct_digits = 1, header = "E (%)") |>
+    fp_render()
+  p_data <- ggplot2::ggplot_build(rendered[[2]])$data[[1]]
+  expect_equal(p_data$label[1], "42 (42.0%)")
+  expect_equal(p_data$label[2], "18 (39.1%)")
+  expect_equal(p_data$label[3], "")
+})
+
+test_that("fp_pair() custom format function works", {
+  df <- .pair_df()
+  rendered <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_pair(c("events", "total"),
+             format = function(data, cols) paste0(data[[cols[1]]], " of ", data[[cols[2]]]),
+             header = "Custom") |>
+    fp_render()
+  p_data <- ggplot2::ggplot_build(rendered[[2]])$data[[1]]
+  expect_equal(p_data$label[1], "42 of 100")
+})
+
+test_that("fp_pair() digits recycled to length(cols)", {
+  spec <- fp_pair(c("x", "y"), digits = 1)
+  expect_equal(spec$digits, c(1L, 1L))
+
+  spec2 <- fp_pair(c("x", "y"), digits = c(1L, 2L))
+  expect_equal(spec2$digits, c(1L, 2L))
+})
+
+test_that("fp_pair() fraction with 3 cols", {
+  df <- data.frame(a = 1, b = 2, c = 3)
+  rendered <- forest_plot(df) |>
+    add_pair(c("a", "b", "c"), digits = 0, sep = "|") |>
+    fp_render()
+  p_data <- ggplot2::ggplot_build(rendered[[1]])$data[[1]]
+  expect_equal(p_data$label[1], "1|2|3")
+})
+
+test_that("fp_pair() rejects percent with != 2 cols", {
+  expect_error(fp_pair(c("a", "b", "c"), format = "percent"), "exactly 2")
+})
+
+test_that("fp_pair() rejects invalid format", {
+  expect_error(fp_pair(c("a", "b"), format = "ratio"), "`format`")
+})
+
+test_that("fp_pair() rejects empty cols", {
+  expect_error(fp_pair(character(0)), "non-empty character vector")
+})
+
+test_that("fp_pair() renders end-to-end without error", {
+  df <- .pair_df()
+  expect_no_error(
+    forest_plot(df) |>
+      add_text("label", header = "Label") |>
+      add_pair(c("events", "total"), format = "percent",
+               digits = 0, pct_digits = 1) |>
+      fp_render()
+  )
+})
+
 # ── add_rule() ────────────────────────────────────────────────────────────────
 
 .make_rule_test_plot <- function(df = NULL) {

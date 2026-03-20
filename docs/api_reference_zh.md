@@ -10,6 +10,7 @@
 - [面板规格构造器](#面板规格构造器)
   - [fp_text() — 文本面板](#fp_text)
   - [fp_text_ci() — CI 文本面板](#fp_text_ci)
+  - [fp_pair() — 数值对面板](#fp_pair)
   - [fp_ci() — 置信区间面板](#fp_ci)
   - [fp_bar() — 柱状面板](#fp_bar)
   - [fp_dot() — 散点面板](#fp_dot)
@@ -33,6 +34,9 @@
 - [扩展接口](#扩展接口)
 - [数据辅助](#数据辅助)
 - [典型用法示例](#典型用法示例)
+- [从 v0.1.0 迁移](#从-v010-迁移)
+- [内部实现](#内部实现)
+- [对象模型](#对象模型)
 
 ---
 
@@ -165,6 +169,72 @@ fp_text_ci(
 ```
 
 **示例：** `digits = 2` → `"0.92 (0.74, 1.14)"`
+
+<a id="fp_pair"></a>
+### `fp_pair()` — 数值对面板
+
+将两列或多列数值格式化为单个文本列。
+
+```r
+fp_pair(
+  cols,                         # 列名字符向量，length >= 1（必填）
+  format       = "fraction",    # "fraction" / "percent" / function(data, cols)
+  header       = NULL,
+  width        = 1.5,
+  digits       = 0,             # 整数或整数向量，循环补齐至 length(cols)
+  pct_digits   = 1,             # percent 模式下百分比小数位
+  sep          = "/",           # fraction 模式下的分隔符
+  na           = "",            # NA 行显示的字符串
+  align        = "right",
+  header_align = NULL,
+  fontface     = NULL,
+  colour       = NULL,
+  size         = NULL,
+  mapping      = NULL
+)
+```
+
+**三种 `format` 模式：**
+
+| 模式 | 输出示例 | 限制 |
+|------|----------|------|
+| `"fraction"`（默认）| `"42/100"` | 支持 2 列以上，按 `sep` 拼接 |
+| `"percent"` | `"42 (42.0%)"` | 恰好 2 列，`cols[1]/cols[2]*100` 自动计算 |
+| `function(data, cols)` | 自定义 | 接收完整数据框和列名向量，返回字符向量 |
+
+**`digits` 向量：**
+
+```r
+# 两列均保留 0 位小数
+add_pair(c("events", "total"), digits = 0)
+
+# 每列独立控制
+add_pair(c("mean", "sd"), format = "fraction", sep = " ± ", digits = c(1, 2))
+# → "3.4 ± 0.56"
+```
+
+**示例：**
+
+```r
+forest_plot(df) |>
+  add_text("label", header = "Subgroup", width = 1.8) |>
+  add_pair(c("events", "total"),
+           header = "Events/N", digits = 0, width = 0.9) |>
+  add_pair(c("events", "total"),
+           format = "percent", header = "Events (%)",
+           digits = 0, pct_digits = 1, width = 1.1) |>
+  add_ci("HR", "LCI", "UCI", header = "HR", trans = "log") |>
+  fp_render()
+
+# 自定义格式（3 列）
+add_pair(
+  c("events", "total", "pop"),
+  format = function(data, cols) {
+    paste0(data[[cols[1]]], "/", data[[cols[2]]], " [n=", data[[cols[3]]], "]")
+  },
+  header = "Events/N [Pop]"
+)
+```
 
 <a id="fp_ci"></a>
 ### `fp_ci()` — 置信区间面板
@@ -369,6 +439,7 @@ forest_plot(df) |>
 |------|-----------|------|
 | `add_text(x, ...)` | `fp_text()` | 添加文本面板 |
 | `add_text_ci(x, ...)` | `fp_text_ci()` | 添加 CI 文本面板 |
+| `add_pair(x, ...)` | `fp_pair()` | 添加数值对面板 |
 | `add_ci(x, ...)` | `fp_ci()` | 添加置信区间面板 |
 | `add_bar(x, ...)` | `fp_bar()` | 添加柱状面板 |
 | `add_dot(x, ...)` | `fp_dot()` | 添加散点面板 |
@@ -848,3 +919,91 @@ forest_plot(df) |>
 | `header_hjust = 0.5` | `header_align = "center"` |
 | `fp_layout(...)` | 已移除，直接用 `add_*()` |
 | `plot$layout$specs` | `plot$specs` |
+
+---
+
+## 内部实现
+
+> 面向贡献者和高级用户。不要在包外代码中依赖这些内部实现——它们可能在不通知的情况下发生变化。
+
+### 文件职责
+
+| 文件 | 职责 |
+|------|------|
+| `constants.R` | 命名常量（魔法数字、默认值） |
+| `validate.R` | 全包共用的输入验证函数 |
+| `geometry.R` | 行布局、坐标系、面板 ggplot 主题 |
+| `style.R` | `.resolve_attr()` — 样式解析管道 |
+| `build_context.R` | `.build_context()` 工厂；汇总行/分组行掩码 |
+| `ci_helpers.R` | CI 数学：范围计算、截断、菱形几何 |
+| `header_group.R` | 分组标题逻辑：层级检测、校验、组装 |
+| `panel.R` | 面板收尾：条纹、水平线、标题行 |
+| `builders.R` | 全部 8 个内置构建器（text、text_ci、pair、gap、ci、bar、dot、custom） |
+| `rule.R` | `add_rule()`、`.evaluate_rule_when()`、`.apply_rules()` |
+| `registry.R` | 构建器注册表（`fp_register`、`.fp_dispatch`） |
+
+### 样式解析优先级
+
+每个渲染单元格的属性按以下优先级解析（由低到高）：
+
+1. Spec 级默认值（在 `fp_*()` 构造器中设置）
+2. `fp_aes()` 列驱动映射
+3. `add_rule()` 条件覆盖（渲染时求值，后声明的规则优先）
+4. `edit()` 显式覆盖（始终优先——在规则之上重新应用）
+
+### 渲染流程
+
+```
+fp_render(x)
+  ├── .validate_spec()          — 校验所有 spec 与数据的一致性
+  ├── .apply_rules(x)           — 求值条件，写入 row_styles / cell_edits
+  ├── .build_context(x)         — 计算行布局、掩码、条纹填充
+  └── 遍历每个 spec：
+        .fp_dispatch(spec)      — 从注册表查找构建器
+        builder(ctx, spec, cell_edits)
+              ↓
+        .resolve_attr()         — 合并 spec 默认值 + fp_aes + row_styles + cell_edits
+              ↓
+        ggplot2 对象
+  └── patchwork::wrap_plots()   — 拼合所有面板
+  └── 分组标题组装               — 如有 add_header_group() 调用
+```
+
+---
+
+## 对象模型
+
+### `fp_plot`
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `data` | data.frame | 输入数据框 |
+| `specs` | fp_spec 列表 | 从左到右排列的面板规格 |
+| `theme` | fp_theme | 主题对象 |
+| `stripe_colors` | character 或 NULL | 交替条纹颜色 |
+| `summary_rows` | integer 向量 | 汇总行索引 |
+| `group_rows` | integer 向量 | 分组行索引 |
+| `row_heights` | numeric 向量 | 逐行高度（长度 = nrow） |
+| `header_height` | numeric | 标题行高度 |
+| `row_styles` | 列表的列表 | 行级样式覆盖（由 `edit()` 和 `add_group()` 写入） |
+| `cell_edits` | 列表的列表 | 面板 → 行 → 样式覆盖（由 `edit(panel = ...)` 写入） |
+| `hlines` | 列表 | 水平线定义 |
+| `header_groups` | 列表 | 跨列分组标题定义 |
+| `rules` | fp_rule 列表 | 条件样式规则（由 `add_rule()` 写入，渲染时应用） |
+
+### `fp_spec_*`
+
+所有 spec 共享 `type` 和 `width` 字段。每个具体 spec 携带面板特有字段。类向量为 `c("fp_spec_<type>", "fp_spec")`。
+
+### `fp_aes`
+
+将美学名称（`colour`、`fill` 等）映射到列名字符串的命名列表，类为 `"fp_aes"`。
+
+### `fp_rule`
+
+| 字段 | 说明 |
+|------|------|
+| `when` | 公式、函数或逻辑向量——条件 |
+| `panel` | NULL（行级）或面板标识符（单元格级） |
+| `style` | 样式属性的命名列表 |
+| `height` | 行高覆盖值或 NULL |

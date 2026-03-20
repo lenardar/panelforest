@@ -116,6 +116,58 @@
   .build_text(ctx, text_spec, cell_edits)
 }
 
+# --- pair builder ---
+
+.build_pair <- function(ctx, spec, cell_edits) {
+  text_spec <- .make_spec(
+    "text",
+    width        = spec$width,
+    col          = spec$cols[[1]],
+    header       = spec$header,
+    hjust        = spec$hjust,
+    header_hjust = spec$header_hjust,
+    indent       = NULL,
+    indent_width = 0,
+    formatter = function(values, data) {
+      cols       <- spec$cols
+      digits     <- spec$digits
+      na_str     <- spec$na %||% ""
+
+      fmt_col <- function(i) {
+        x <- suppressWarnings(as.numeric(data[[cols[[i]]]]))
+        formatC(x, digits = digits[[i]], format = "f")
+      }
+
+      if (is.function(spec$format)) {
+        result <- spec$format(data, cols)
+        ifelse(is.na(result), na_str, as.character(result))
+
+      } else if (spec$format == "fraction") {
+        any_na <- Reduce("|", lapply(cols, function(col) is.na(data[[col]])))
+        parts  <- lapply(seq_along(cols), fmt_col)
+        joined <- do.call(paste, c(parts, list(sep = spec$sep)))
+        ifelse(any_na, na_str, joined)
+
+      } else {  # "percent"
+        a     <- suppressWarnings(as.numeric(data[[cols[[1]]]]))
+        b     <- suppressWarnings(as.numeric(data[[cols[[2]]]]))
+        pct   <- round(a / b * 100, spec$pct_digits)
+        a_fmt <- formatC(a, digits = digits[[1]], format = "f")
+        p_fmt <- formatC(pct, digits = spec$pct_digits, format = "f")
+        ifelse(is.na(a) | is.na(b) | is.nan(pct),
+               na_str,
+               paste0(a_fmt, " (", p_fmt, "%)"))
+      }
+    },
+    fontface = spec$fontface,
+    colour   = spec$colour,
+    size     = spec$size,
+    mapping  = spec$mapping
+  )
+
+  .build_text(ctx, text_spec, cell_edits)
+}
+
 # --- gap builder ---
 
 .build_gap <- function(ctx, spec, cell_edits) {

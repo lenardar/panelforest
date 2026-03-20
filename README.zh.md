@@ -158,6 +158,30 @@ forest_plot(df) |>
 
 每个分组标题支持独立样式：`colour`、`fontface`、`size`、`family`、`background`、`border`、`height`。
 
+## 数值对列 — `fp_pair()`
+
+`fp_pair()` 将两列或多列数值格式化为单个文本列。内置模式覆盖最常见的临床报告格式，自定义函数处理其他场景。
+
+```r
+forest_plot(df) |>
+  add_text("label", header = "Subgroup", width = 1.8) |>
+  # "42/100"
+  add_pair(c("events", "total"), header = "Events/N", digits = 0, width = 0.9) |>
+  # "42 (42.0%)"
+  add_pair(c("events", "total"), format = "percent",
+           header = "Events (%)", digits = 0, pct_digits = 1, width = 1.1) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log") |>
+  fp_render()
+```
+
+| `format` | 输出示例 | 说明 |
+|---|---|---|
+| `"fraction"`（默认）| `"42/100"` | 所有列按 `sep` 拼接，支持 2 列以上 |
+| `"percent"` | `"42 (42.0%)"` | 要求恰好 2 列，百分比自动计算 |
+| `function(data, cols)` | 自定义 | 接收完整数据框和列名向量 |
+
+`digits` 控制各列小数位（循环补齐至 `length(cols)`）；`pct_digits` 控制 `"percent"` 模式下百分比的小数位。
+
 ## 格式化工具
 
 `fp_text()` 接受格式化函数，可以在绘图时将原始数值列转换为格式化文本：
@@ -177,7 +201,7 @@ forest_plot(df) |>
 | 类别     | 函数                                                                                          |
 | -------- | --------------------------------------------------------------------------------------------- |
 | 布局     | `forest_plot()`, `fp_render()`, `fp_size()`, `fp_save()`                                             |
-| 文本面板 | `fp_text()`, `fp_text_ci()`                                                               |
+| 文本面板 | `fp_text()`, `fp_text_ci()`, `fp_pair()`                                                  |
 | 数值面板 | `fp_bar()`, `fp_dot()`, `fp_ci()`                                                       |
 | 结构面板 | `fp_gap()`（相对间距）, `fp_spacer()`（固定间距）                                         |
 | 装饰     | `add_stripe()`, `add_summary()`, `add_group()`, `add_hline()`, `add_header_group()` |
@@ -198,6 +222,5 @@ forest_plot(df) |>
 - **`forest_plot_from()` — 模型直出森林图。** 传入拟合好的模型对象，自动生成森林图。根据模型类型自动推断效应量（逻辑回归 → OR，Cox → HR，线性模型 → β），底层调用 `broom::tidy()`。逐步适配更多模型：`glm`、`coxph`、`lm`、`lme4`、`metafor::rma`、`brms` 等。
 - **更多坐标变换。** `trans` 参数扩展支持 `"sqrt"`、`"logit"` 等变换。
 - **文本自动换行。** `fp_text()` 增加 `wrap` 参数，超长标签自动折行并调整行高。
-- **`fp_pair()` — 数值对列。** 直接从两个数据列生成 "事件数/总数" 或 "n (%)" 格式的面板。
 - **列级样式。** 通过 `edit()` 对整列施加背景色或边框。
 - **脚注系统。** `add_footnote()` 在图底部追加来源说明和缩略语注释。

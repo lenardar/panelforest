@@ -29,6 +29,7 @@ fp_register <- function(type, builder, overwrite = FALSE) {
 .register_builtin_builders <- function() {
   fp_register("text", .build_text, overwrite = TRUE)
   fp_register("text_ci", .build_text_ci, overwrite = TRUE)
+  fp_register("pair",    .build_pair,    overwrite = TRUE)
   fp_register("gap", .build_gap, overwrite = TRUE)
   fp_register("spacer", .build_gap, overwrite = TRUE)
   fp_register("ci", .build_ci, overwrite = TRUE)

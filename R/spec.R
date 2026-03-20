@@ -156,6 +156,82 @@ fp_text_ci <- function(
   )
 }
 
+fp_pair <- function(
+  cols,
+  format     = "fraction",
+  header     = NULL,
+  width      = 1.5,
+  digits     = 0,
+  pct_digits = 1,
+  sep        = "/",
+  na         = "",
+  align      = "right",
+  header_align = NULL,
+  fontface   = NULL,
+  colour     = NULL,
+  size       = NULL,
+  mapping    = NULL
+) {
+  if (!is.character(cols) || !length(cols) || anyNA(cols) || any(!nzchar(cols))) {
+    rlang::abort("`cols` must be a non-empty character vector of column names.")
+  }
+
+  if (!is.function(format) && !(is.character(format) && length(format) == 1L && format %in% c("fraction", "percent"))) {
+    rlang::abort('`format` must be "fraction", "percent", or a function(data, cols).')
+  }
+
+  if (identical(format, "percent") && length(cols) != 2L) {
+    rlang::abort('`format = "percent"` requires exactly 2 columns (numerator and denominator).')
+  }
+
+  if (!is.numeric(digits) || anyNA(digits) || any(digits < 0)) {
+    rlang::abort("`digits` must be a non-negative numeric vector.")
+  }
+  digits <- as.integer(rep_len(digits, length(cols)))
+
+  if (!is.numeric(pct_digits) || length(pct_digits) != 1L || is.na(pct_digits) || pct_digits < 0) {
+    rlang::abort("`pct_digits` must be a single non-negative number.")
+  }
+
+  if (!is.character(sep) || length(sep) != 1L) {
+    rlang::abort("`sep` must be a single string.")
+  }
+
+  if (!is.character(na) || length(na) != 1L) {
+    rlang::abort("`na` must be a single string.")
+  }
+
+  .validate_align(align, arg = "align")
+  .validate_align(header_align, arg = "header_align", allow_null = TRUE)
+
+  hjust        <- .align_to_hjust(align)
+  header_hjust <- if (!is.null(header_align)) .align_to_hjust(header_align) else NULL
+
+  if (!is.null(mapping) && !inherits(mapping, "fp_aes")) {
+    rlang::abort("`mapping` must be `NULL` or created by `fp_aes()`.")
+  }
+
+  .make_spec(
+    "pair",
+    cols         = cols,
+    format       = format,
+    header       = header,
+    width        = width,
+    digits       = digits,
+    pct_digits   = as.integer(pct_digits),
+    sep          = sep,
+    na           = na,
+    align        = align,
+    hjust        = hjust,
+    header_align = header_align,
+    header_hjust = header_hjust,
+    fontface     = fontface,
+    colour       = colour,
+    size         = size,
+    mapping      = mapping
+  )
+}
+
 fp_gap <- function(width = 0.2, header = NULL, header_align = "center") {
   .validate_align(header_align, arg = "header_align")
   header_hjust <- .align_to_hjust(header_align)
@@ -524,6 +600,7 @@ fp_custom <- function(
     spec$type,
     text = spec$col,
     text_ci = c(spec$est, spec$lower, spec$upper),
+    pair    = spec$cols,
     ci = c(spec$est, spec$lower, spec$upper),
     bar = spec$col,
     dot = c(spec$col, spec$lower, spec$upper),

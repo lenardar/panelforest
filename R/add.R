@@ -32,6 +32,10 @@ add_ci <- function(x, ...) {
   .append_spec(x, fp_ci(...))
 }
 
+add_pair <- function(x, ...) {
+  .append_spec(x, fp_pair(...))
+}
+
 add_custom <- function(x, spec) {
   .validate_fp_plot(x)
 

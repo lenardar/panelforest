@@ -156,6 +156,30 @@ forest_plot(df) |>
 
 Each group supports independent styling: `colour`, `fontface`, `size`, `family`, `background`, `border`, and `height`.
 
+## Numeric Pair Columns — `fp_pair()`
+
+`fp_pair()` formats two or more numeric columns into a single text column. Built-in modes cover the most common clinical reporting patterns; a custom function handles everything else.
+
+```r
+forest_plot(df) |>
+  add_text("label", header = "Subgroup", width = 1.8) |>
+  # "42/100"
+  add_pair(c("events", "total"), header = "Events/N", digits = 0, width = 0.9) |>
+  # "42 (42.0%)"
+  add_pair(c("events", "total"), format = "percent",
+           header = "Events (%)", digits = 0, pct_digits = 1, width = 1.1) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log") |>
+  fp_render()
+```
+
+| `format` | Output | Notes |
+|---|---|---|
+| `"fraction"` (default) | `"42/100"` | All cols joined by `sep`; works with 2+ cols |
+| `"percent"` | `"42 (42.0%)"` | Requires exactly 2 cols; percentage auto-computed |
+| `function(data, cols)` | custom | Full data frame and column names passed in |
+
+`digits` controls decimal places per column (recycled to `length(cols)`). `pct_digits` controls the computed percentage in `"percent"` mode.
+
 ## Formatting Helpers
 
 `fp_text()` accepts a formatter function, so you can keep raw numeric columns in the data and render them only at plot time.
@@ -173,7 +197,7 @@ forest_plot(df) |>
 ## Available Building Blocks
 
 - Layout: `forest_plot()`, `fp_render()`, `fp_size()`, `fp_save()`
-- Text: `fp_text()`, `fp_text_ci()`
+- Text: `fp_text()`, `fp_text_ci()`, `fp_pair()`
 - Quantitative panels: `fp_bar()`, `fp_dot()`, `fp_ci()`
 - Structure panels: `fp_gap()` for relative gaps, `fp_spacer()` for absolute whitespace
 - Decorations: `add_stripe()`, `add_summary()`, `add_group()`, `add_hline()`, `add_header_group()`
@@ -193,6 +217,5 @@ Features planned for future releases:
 - **`forest_plot_from()` — model-to-plot pipeline.** Pass a fitted model object and get a forest plot directly. Auto-detects model type (logistic → OR, Cox → HR, linear → β) and calls `broom::tidy()` under the hood. Gradually expanding model support: `glm`, `coxph`, `lm`, `lme4`, `metafor::rma`, `brms`, and more.
 - **More scale transformations.** Extend `trans` beyond `"identity"` and `"log"` to include `"sqrt"`, `"logit"`, and others.
 - **Text wrapping.** Auto-wrap long labels in `fp_text()` via a `wrap` parameter, with automatic row height adjustment.
-- **`fp_pair()` — numeric pair column.** Display "events/total" or "n (percent)" directly from two data columns.
 - **Column-level styling.** Apply background fills or borders to entire columns via `edit()`.
 - **Footnote system.** `add_footnote()` to append source notes and abbreviations below the plot.
