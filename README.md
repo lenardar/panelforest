@@ -215,6 +215,7 @@ Pre-release (v0.2.0). API may change before v1.0.
 Features planned for future releases:
 
 - **`forest_plot_from()` — model-to-plot pipeline.** Pass a fitted model object and get a forest plot directly. Auto-detects model type (logistic → OR, Cox → HR, linear → β) and calls `broom::tidy()` under the hood. Gradually expanding model support: `glm`, `coxph`, `lm`, `lme4`, `metafor::rma`, `brms`, and more.
+- **Multiple reference lines in `fp_ci()`.** Extend `ref_line` to accept a numeric vector so each CI panel can display several vertical reference lines independently (e.g. a null line at 1.0 and a non-inferiority margin at 1.25). Style parameters `ref_line_colour` and `ref_line_linetype` follow the same vectorised convention and are recycled to `length(ref_line)`. Each CI panel owns its own lines, keeping them in the correct coordinate system when the plot contains multiple CI panels with different scales or transforms.
 - **More scale transformations.** Extend `trans` beyond `"identity"` and `"log"` to include `"sqrt"`, `"logit"`, and others.
 - **Text wrapping.** Auto-wrap long labels in `fp_text()` via a `wrap` parameter, with automatic row height adjustment.
 - **Footnote system.** `add_footnote()` to append source notes and abbreviations below the plot.
