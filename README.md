@@ -28,6 +28,7 @@ pak::pak("lenardar/panelforest")
 - Row stripes, summary rows, group-title rows, and horizontal separators
 - Spanning parent headers via `add_header_group()` with automatic multi-level nesting
 - Column-driven aesthetic mappings via `fp_aes()` and unified cell/row editing via `edit()`
+- Conditional row styling via `add_rule()` — highlight rows by data conditions without manual index lookups
 - Diamond CI glyphs with independent border colour, fill colour, and transparency
 - Custom panels via `fp_custom()`
 - Formatting helpers: `fp_fmt_number()`, `fp_fmt_percent()`, `fp_fmt_pvalue()`
@@ -84,6 +85,35 @@ forest_plot(df) |>
 ```
 
 Rows marked with `add_summary()` render as CI diamonds by default. Use `summary_glyph = NULL` to keep the standard point-and-line glyph.
+
+## Conditional Styling — `add_rule()`
+
+`add_rule()` applies styles to rows that satisfy a data condition, evaluated at render time. This is the declarative alternative to looking up row indices manually and calling `edit()`.
+
+```r
+forest_plot(df) |>
+  add_text("label", header = "Subgroup") |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log") |>
+  # Bold and red for significant rows
+  add_rule(~ p_value < 0.05, fontface = "bold", colour = "#b42318") |>
+  # Grey out rows with no estimate
+  add_rule(~ is.na(HR), colour = "grey60") |>
+  fp_render()
+```
+
+The `when` argument accepts:
+
+- A one-sided formula `~ expr` — column names are in scope directly
+- A function `function(data) ...` — receives the full data frame, must return a logical vector
+- A logical vector of length `nrow(data)`
+
+Use `panel` to target a single panel instead of the whole row:
+
+```r
+add_rule(~ p_value < 0.05, panel = "Hazard Ratio", colour = "#b42318")
+```
+
+**Precedence:** `spec defaults` < `fp_aes()` < `add_rule()` < `edit()`. Explicit `edit()` calls always win over conditional rules.
 
 ## Spacers
 
@@ -148,7 +178,7 @@ forest_plot(df) |>
 - Structure panels: `fp_gap()` for relative gaps, `fp_spacer()` for absolute whitespace
 - Decorations: `add_stripe()`, `add_summary()`, `add_group()`, `add_hline()`, `add_header_group()`
 - Aesthetics: `fp_aes()` for column-driven mappings
-- Editing: `edit()` for row-level, cell-level, and height overrides
+- Editing: `edit()` for row-level, cell-level, and height overrides; `add_rule()` for condition-based styling
 - Theme: `fp_theme_default()`, `fp_theme_journal()`
 - Extension: `fp_custom()`, `fp_register()`
 
@@ -161,7 +191,6 @@ Pre-release (v0.2.0). API may change before v1.0.
 Features planned for future releases:
 
 - **`forest_plot_from()` — model-to-plot pipeline.** Pass a fitted model object and get a forest plot directly. Auto-detects model type (logistic → OR, Cox → HR, linear → β) and calls `broom::tidy()` under the hood. Gradually expanding model support: `glm`, `coxph`, `lm`, `lme4`, `metafor::rma`, `brms`, and more.
-- **`add_rule()` — conditional styling.** Declare rules like `add_rule(when = ~ p.value < 0.05, colour = "red")` to highlight rows by data conditions instead of manually calling `edit()` row by row.
 - **More scale transformations.** Extend `trans` beyond `"identity"` and `"log"` to include `"sqrt"`, `"logit"`, and others.
 - **Text wrapping.** Auto-wrap long labels in `fp_text()` via a `wrap` parameter, with automatic row height adjustment.
 - **`fp_pair()` — numeric pair column.** Display "events/total" or "n (percent)" directly from two data columns.

@@ -27,6 +27,7 @@
   - [add_header_group() — 跨列分组标题](#add_header_group)
 - [编辑层](#编辑层)
   - [edit() — 统一编辑接口](#edit)
+  - [add_rule() — 条件样式](#add_rule)
 - [主题](#主题)
 - [格式化工具](#格式化工具)
 - [扩展接口](#扩展接口)
@@ -554,6 +555,66 @@ forest_plot(df) |>
 
   # 3. 行高调整：第 5 行加高
   edit(row = 5, height = 1.5) |>
+
+  fp_render()
+```
+
+<a id="add_rule"></a>
+### `add_rule()` — 条件样式
+
+根据数据条件为匹配的行应用样式，在渲染时对条件求值。
+
+```r
+add_rule(
+  x,
+  when,                         # 条件（必填，见下）
+  panel      = NULL,            # 面板标识（NULL = 行级，指定则为单元格级）
+  fontface   = NULL,
+  colour     = NULL,
+  size       = NULL,
+  fill       = NULL,
+  alpha      = NULL,
+  glyph      = NULL,            # "point" / "diamond"
+  point_size = NULL,
+  line_width = NULL,
+  shape      = NULL,
+  label      = NULL,
+  family     = NULL,
+  height     = NULL             # 行高（单一正数）
+)
+```
+
+**`when` 参数的三种形式：**
+
+| 形式 | 示例 | 说明 |
+|------|------|------|
+| 单侧公式 | `~ p_value < 0.05` | 列名直接在作用域内，可用 `!!` 注入外部变量 |
+| 函数 | `function(data) data$p < 0.05` | 接收完整数据框，返回逻辑向量 |
+| 逻辑向量 | `c(TRUE, FALSE, TRUE)` | 长度必须等于 `nrow(data)` |
+
+**优先级（由低到高）：**
+
+```
+spec 默认值  <  fp_aes()  <  add_rule()  <  edit()
+```
+
+多条规则按声明顺序应用，后声明的规则覆盖先声明的（针对同一属性）。显式的 `edit()` 调用始终优先于任何规则。
+
+**示例：**
+
+```r
+forest_plot(df) |>
+  add_text("label", header = "Subgroup") |>
+  add_ci("est", "lwr", "upr", header = "HR (95% CI)", trans = "log") |>
+
+  # 行级：显著行全行加粗变红
+  add_rule(~ p_value < 0.05, fontface = "bold", colour = "#b42318") |>
+
+  # 行级：无估计值的分组标题行变灰
+  add_rule(~ is.na(est), colour = "grey60") |>
+
+  # 单元格级：仅 CI 面板的颜色受影响
+  add_rule(~ p_value < 0.01, panel = "HR (95% CI)", colour = "#7f1d1d") |>
 
   fp_render()
 ```

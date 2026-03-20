@@ -35,7 +35,8 @@ forest_plot <- function(data, theme = fp_theme_default(), row_height = DEFAULT_R
       header_height = unname(row_height),
       row_styles = vector("list", nrow(data)),
       cell_edits = list(),
-      hlines = list()
+      hlines = list(),
+      rules = list()
     ),
     class = "fp_plot"
   )

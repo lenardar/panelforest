@@ -802,6 +802,147 @@ test_that("fp_save accepts custom width and height", {
   expect_true(file.exists(tmp))
 })
 
+# ── add_rule() ────────────────────────────────────────────────────────────────
+
+.make_rule_test_plot <- function(df = NULL) {
+  if (is.null(df)) {
+    df <- data.frame(
+      label  = c("A", "B", "C", "D"),
+      est    = c(0.8, 1.2, 0.95, 1.5),
+      lwr    = c(0.6, 0.9, 0.7,  1.1),
+      upr    = c(1.1, 1.6, 1.3,  2.1),
+      pval   = c(0.04, 0.12, 0.55, 0.001)
+    )
+  }
+  forest_plot(df) |>
+    add_text("label", header = "Subgroup") |>
+    add_ci("est", "lwr", "upr", header = "HR")
+}
+
+test_that("add_rule() formula when: styles matching rows at row level", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(~ pval < 0.05, colour = "red", fontface = "bold")
+
+  # Rules are applied during rendering; apply them manually to inspect
+  applied <- panelforest:::.apply_rules(fp)
+
+  # Rows 1 (pval=0.04) and 4 (pval=0.001) should be styled
+  expect_equal(applied$row_styles[[1]]$colour, "red")
+  expect_equal(applied$row_styles[[1]]$fontface, "bold")
+  expect_equal(applied$row_styles[[4]]$colour, "red")
+  expect_null(applied$row_styles[[2]]$colour)
+  expect_null(applied$row_styles[[3]]$colour)
+})
+
+test_that("add_rule() function when: equivalent result to formula", {
+  fp_formula  <- .make_rule_test_plot() |> add_rule(~ pval < 0.05, colour = "blue")
+  fp_function <- .make_rule_test_plot() |> add_rule(function(d) d$pval < 0.05, colour = "blue")
+
+  applied_formula  <- panelforest:::.apply_rules(fp_formula)
+  applied_function <- panelforest:::.apply_rules(fp_function)
+
+  expect_equal(applied_formula$row_styles, applied_function$row_styles)
+})
+
+test_that("add_rule() logical vector when: works correctly", {
+  mask <- c(TRUE, FALSE, FALSE, TRUE)
+  fp <- .make_rule_test_plot() |> add_rule(mask, fill = "yellow")
+  applied <- panelforest:::.apply_rules(fp)
+
+  expect_equal(applied$row_styles[[1]]$fill, "yellow")
+  expect_equal(applied$row_styles[[4]]$fill, "yellow")
+  expect_null(applied$row_styles[[2]]$fill)
+})
+
+test_that("add_rule() panel arg writes into cell_edits", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(~ pval < 0.05, panel = 1L, colour = "red")
+
+  applied <- panelforest:::.apply_rules(fp)
+
+  # Row-level styles should be unchanged
+  expect_null(applied$row_styles[[1]]$colour)
+  # Cell-level edits for panel 1 should have colour set for rows 1 and 4
+  expect_equal(applied$cell_edits[[1]][[1]]$colour, "red")
+  expect_equal(applied$cell_edits[[1]][[4]]$colour, "red")
+  expect_null(applied$cell_edits[[1]][[2]])
+})
+
+test_that("edit() wins over add_rule() on the same row/attribute", {
+  fp <- .make_rule_test_plot() |>
+    edit(row = 1, colour = "blue") |>
+    add_rule(~ pval < 0.05, colour = "red")
+
+  applied <- panelforest:::.apply_rules(fp)
+  # Explicit edit() must beat the conditional rule
+  expect_equal(applied$row_styles[[1]]$colour, "blue")
+  # Row 4 also matches the rule but has no explicit edit → rule applies
+  expect_equal(applied$row_styles[[4]]$colour, "red")
+})
+
+test_that("add_rule() later rule wins over earlier rule on same attribute", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(~ pval < 0.05, colour = "green") |>
+    add_rule(~ pval < 0.05, colour = "red")
+
+  applied <- panelforest:::.apply_rules(fp)
+  expect_equal(applied$row_styles[[1]]$colour, "red")
+})
+
+test_that("add_rule() no-match condition: no error, no changes", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(~ pval > 99, colour = "red")
+
+  applied <- panelforest:::.apply_rules(fp)
+  expect_true(all(vapply(applied$row_styles, is.null, logical(1))))
+})
+
+test_that("add_rule() height updates row_heights", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(~ pval < 0.05, height = 0.8)
+
+  applied <- panelforest:::.apply_rules(fp)
+  expect_equal(applied$row_heights[[1]], 0.8)
+  expect_equal(applied$row_heights[[4]], 0.8)
+  # Unmatched rows keep the default height
+  expect_equal(applied$row_heights[[2]], fp$row_heights[[2]])
+})
+
+test_that("add_rule() rejects two-sided formula", {
+  fp <- .make_rule_test_plot()
+  expect_error(add_rule(fp, pval ~ pval < 0.05, colour = "red"), "one-sided formula")
+})
+
+test_that("add_rule() rejects invalid when type", {
+  fp <- .make_rule_test_plot()
+  expect_error(add_rule(fp, "pval < 0.05", colour = "red"), "`when` must be")
+})
+
+test_that("add_rule() rejects when with NA values at render time", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(~ ifelse(pval < 0.05, TRUE, NA), colour = "red")
+  expect_error(panelforest:::.apply_rules(fp), "NA values")
+})
+
+test_that("add_rule() rejects logical vector of wrong length at render time", {
+  fp <- .make_rule_test_plot() |>
+    add_rule(c(TRUE, FALSE), colour = "red")   # 2 elements, data has 4 rows
+  expect_error(panelforest:::.apply_rules(fp), "length")
+})
+
+test_that("add_rule() rejects missing style parameters", {
+  fp <- .make_rule_test_plot()
+  expect_error(add_rule(fp, ~ pval < 0.05), "at least one style parameter")
+})
+
+test_that("add_rule() renders end-to-end without error", {
+  expect_no_error(
+    .make_rule_test_plot() |>
+      add_rule(~ pval < 0.05, fontface = "bold", colour = "red") |>
+      fp_render()
+  )
+})
+
 test_that("fp_save rejects non-fp_plot input", {
   expect_error(fp_save(list(), tempfile()), class = "rlang_error")
 })

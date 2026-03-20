@@ -28,6 +28,7 @@ pak::pak("lenardar/panelforest")
 - 行条纹、汇总行、分组行、水平分隔线等结构装饰
 - 跨列分组标题 `add_header_group()`，支持自动多层嵌套
 - 通过 `fp_aes()` 实现列驱动的美学映射，通过 `edit()` 统一编辑行/单元格
+- 通过 `add_rule()` 实现基于数据条件的声明式行样式，无需手动查找行号
 - 菱形 CI 图示符，支持独立控制边框色、填充色和透明度
 - 自定义面板 `fp_custom()` 与自定义构建器 `fp_register()`
 - 格式化工具：`fp_fmt_number()`、`fp_fmt_percent()`、`fp_fmt_pvalue()`
@@ -86,6 +87,35 @@ forest_plot(df) |>
 ```
 
 通过 `add_summary()` 标记的汇总行默认使用菱形图示符。设置 `summary_glyph = NULL` 可保持标准的点线样式。
+
+## 条件样式 — `add_rule()`
+
+`add_rule()` 根据数据条件为匹配的行应用样式，在渲染时求值。这是"按条件高亮"的声明式写法，替代手动查找行索引再逐一调用 `edit()` 的方式。
+
+```r
+forest_plot(df) |>
+  add_text("label", header = "Subgroup") |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log") |>
+  # 显著行加粗变红
+  add_rule(~ p_value < 0.05, fontface = "bold", colour = "#b42318") |>
+  # 无估计值的行变灰
+  add_rule(~ is.na(HR), colour = "grey60") |>
+  fp_render()
+```
+
+`when` 参数支持三种形式：
+
+- 单侧公式 `~ expr`：列名直接在作用域内可用
+- 函数 `function(data) ...`：接收完整数据框，返回逻辑向量
+- 长度等于 `nrow(data)` 的逻辑向量
+
+使用 `panel` 参数可将样式限定到单个面板：
+
+```r
+add_rule(~ p_value < 0.05, panel = "Hazard Ratio", colour = "#b42318")
+```
+
+**优先级：** `spec 默认值` < `fp_aes()` < `add_rule()` < `edit()`。显式的 `edit()` 调用始终优先于条件规则。
 
 ## 间距控制
 
@@ -152,7 +182,7 @@ forest_plot(df) |>
 | 结构面板 | `fp_gap()`（相对间距）, `fp_spacer()`（固定间距）                                         |
 | 装饰     | `add_stripe()`, `add_summary()`, `add_group()`, `add_hline()`, `add_header_group()` |
 | 美学映射 | `fp_aes()`                                                                                  |
-| 编辑     | `edit()`（行级 / 单元格级 / 行高）                                                          |
+| 编辑     | `edit()`（行级 / 单元格级 / 行高）、`add_rule()`（条件样式）                               |
 | 主题     | `fp_theme_default()`, `fp_theme_journal()`                                                |
 | 扩展     | `fp_custom()`, `fp_register()`                                                            |
 | 格式化   | `fp_fmt_number()`, `fp_fmt_percent()`, `fp_fmt_pvalue()`                                |
@@ -166,7 +196,6 @@ forest_plot(df) |>
 计划在后续版本中实现的功能：
 
 - **`forest_plot_from()` — 模型直出森林图。** 传入拟合好的模型对象，自动生成森林图。根据模型类型自动推断效应量（逻辑回归 → OR，Cox → HR，线性模型 → β），底层调用 `broom::tidy()`。逐步适配更多模型：`glm`、`coxph`、`lm`、`lme4`、`metafor::rma`、`brms` 等。
-- **`add_rule()` — 条件样式。** 声明式规则，如 `add_rule(when = ~ p.value < 0.05, colour = "red")`，按数据条件批量高亮行，替代逐行 `edit()`。
 - **更多坐标变换。** `trans` 参数扩展支持 `"sqrt"`、`"logit"` 等变换。
 - **文本自动换行。** `fp_text()` 增加 `wrap` 参数，超长标签自动折行并调整行高。
 - **`fp_pair()` — 数值对列。** 直接从两个数据列生成 "事件数/总数" 或 "n (%)" 格式的面板。

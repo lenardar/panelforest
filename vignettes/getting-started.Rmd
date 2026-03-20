@@ -234,6 +234,45 @@ its integer index.
 
 ---
 
+## Conditional styling — `add_rule()`
+
+`add_rule()` is the declarative alternative to looking up row indices and
+calling `edit()` manually.  The condition is evaluated against the data frame
+at render time, so it always reflects the current data.
+
+```{r rule, fig.width = 6.5, fig.height = 3.0}
+df_rule <- data.frame(
+  label   = c("Overall", "Age", "  < 65", "  >= 65", "Sex", "  Male", "  Female"),
+  HR      = c(0.72, NA,  0.65,  0.81, NA,  0.69, 0.78),
+  LCI     = c(0.58, NA,  0.48,  0.60, NA,  0.51, 0.56),
+  UCI     = c(0.89, NA,  0.88,  1.09, NA,  0.93, 1.08),
+  p_value = c(0.002, NA, 0.041, 0.140, NA, 0.038, 0.068)
+)
+
+forest_plot(df_rule) |>
+  add_stripe(c("#ffffff", "#f5f7fa")) |>
+  add_summary(1) |>
+  add_group(c(2, 5), fill = "#f0f4f8") |>
+  add_text("label", header = "Subgroup", width = 2) |>
+  add_ci("HR", "LCI", "UCI", header = "Hazard Ratio", trans = "log", width = 3,
+         show_axis = TRUE, xlim = c(0.3, 1.5), breaks = c(0.3, 0.5, 1.0, 1.5)) |>
+  add_text_ci("HR", "LCI", "UCI", header = "HR (95% CI)", width = 1.8) |>
+  # Bold and red for significant rows (p < 0.05)
+  add_rule(~ !is.na(p_value) & p_value < 0.05, fontface = "bold", colour = "#b42318") |>
+  # Grey for group-header rows (no estimate)
+  add_rule(~ is.na(HR), colour = "grey60") |>
+  fp_render()
+```
+
+`when` accepts a one-sided formula (column names are in scope), a function
+`function(data) ...`, or a pre-computed logical vector.  Use `panel` to
+restrict a rule to a single column rather than the whole row.
+
+**Precedence:** `spec defaults` < `fp_aes()` < `add_rule()` < `edit()`.
+Explicit `edit()` calls always win over conditional rules.
+
+---
+
 ## Themes
 
 Two built-in themes are provided.  All parameters can be overridden.

@@ -28,6 +28,7 @@ fp_render <- function(x) {
 
   invisible(lapply(specs, .validate_spec, data = x$data, n_rows = n_rows))
 
+  x <- .apply_rules(x)
   ctx <- .build_context(x)
 
   panels <- lapply(
