@@ -202,7 +202,7 @@ forest_plot(df) |>
 - Structure panels: `fp_gap()` for relative gaps, `fp_spacer()` for absolute whitespace
 - Decorations: `add_stripe()`, `add_summary()`, `add_group()`, `add_hline()`, `add_header_group()`
 - Aesthetics: `fp_aes()` for column-driven mappings
-- Editing: `edit()` for row-level, cell-level, and height overrides; `add_rule()` for condition-based styling
+- Editing: `edit()` for row-level, cell-level, column-level, and height overrides; `add_rule()` for condition-based styling
 - Theme: `fp_theme_default()`, `fp_theme_journal()`
 - Extension: `fp_custom()`, `fp_register()`
 
@@ -217,5 +217,4 @@ Features planned for future releases:
 - **`forest_plot_from()` — model-to-plot pipeline.** Pass a fitted model object and get a forest plot directly. Auto-detects model type (logistic → OR, Cox → HR, linear → β) and calls `broom::tidy()` under the hood. Gradually expanding model support: `glm`, `coxph`, `lm`, `lme4`, `metafor::rma`, `brms`, and more.
 - **More scale transformations.** Extend `trans` beyond `"identity"` and `"log"` to include `"sqrt"`, `"logit"`, and others.
 - **Text wrapping.** Auto-wrap long labels in `fp_text()` via a `wrap` parameter, with automatic row height adjustment.
-- **Column-level styling.** Apply background fills or borders to entire columns via `edit()`.
 - **Footnote system.** `add_footnote()` to append source notes and abbreviations below the plot.

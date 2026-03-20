@@ -532,7 +532,7 @@ Replaces the old `edit_cell()`, `add_row_style()`, and `add_row_height()`.
 ```r
 edit(
   x,
-  row,                          # row index or vector
+  row        = NULL,            # row index or vector; NULL = all rows
   panel      = NULL,            # panel identifier (NULL = row-level)
   fontface   = NULL,
   colour     = NULL,
@@ -549,15 +549,16 @@ edit(
 )
 ```
 
-**Three modes:**
+**Four modes:**
 
 | Mode | Condition | Effect |
 |------|-----------|--------|
-| Row-level | `panel = NULL` | Style applied across all panels in the row |
-| Cell-level | `panel` specified | Style applied to that panel only |
-| Height | `height` set | Modifies row height (independent of `panel`) |
+| Row-level | `row` specified, `panel = NULL` | Style applied across all panels in those rows |
+| Cell-level | `row` and `panel` specified | Style applied to that panel in those rows only |
+| Column-level | `row = NULL`, `panel` specified | Style applied to all rows of that panel |
+| Height | `height` set | Modifies row height; requires `row` to be specified |
 
-All three modes can be combined in one call.
+Row-level, cell-level, and height modes can be combined in one call.
 
 **Panel identifier forms:**
 

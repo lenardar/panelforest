@@ -206,7 +206,7 @@ forest_plot(df) |>
 | 结构面板 | `fp_gap()`（相对间距）, `fp_spacer()`（固定间距）                                         |
 | 装饰     | `add_stripe()`, `add_summary()`, `add_group()`, `add_hline()`, `add_header_group()` |
 | 美学映射 | `fp_aes()`                                                                                  |
-| 编辑     | `edit()`（行级 / 单元格级 / 行高）、`add_rule()`（条件样式）                               |
+| 编辑     | `edit()`（行级 / 单元格级 / 列级 / 行高）、`add_rule()`（条件样式）                        |
 | 主题     | `fp_theme_default()`, `fp_theme_journal()`                                                |
 | 扩展     | `fp_custom()`, `fp_register()`                                                            |
 | 格式化   | `fp_fmt_number()`, `fp_fmt_percent()`, `fp_fmt_pvalue()`                                |
@@ -222,5 +222,4 @@ forest_plot(df) |>
 - **`forest_plot_from()` — 模型直出森林图。** 传入拟合好的模型对象，自动生成森林图。根据模型类型自动推断效应量（逻辑回归 → OR，Cox → HR，线性模型 → β），底层调用 `broom::tidy()`。逐步适配更多模型：`glm`、`coxph`、`lm`、`lme4`、`metafor::rma`、`brms` 等。
 - **更多坐标变换。** `trans` 参数扩展支持 `"sqrt"`、`"logit"` 等变换。
 - **文本自动换行。** `fp_text()` 增加 `wrap` 参数，超长标签自动折行并调整行高。
-- **列级样式。** 通过 `edit()` 对整列施加背景色或边框。
 - **脚注系统。** `add_footnote()` 在图底部追加来源说明和缩略语注释。

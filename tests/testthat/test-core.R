@@ -1032,6 +1032,50 @@ test_that("add_rule() renders end-to-end without error", {
   )
 })
 
+# ── column-level edit (row = NULL) ────────────────────────────────────────────
+
+test_that("edit() with row = NULL applies style to all rows (row-level)", {
+  df <- data.frame(label = c("A", "B", "C"), est = c(1, 2, 3),
+                   lwr = c(0.5, 1.5, 2.5), upr = c(1.5, 2.5, 3.5))
+  fp <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_ci("est", "lwr", "upr", header = "HR") |>
+    edit(colour = "grey50")
+
+  expect_true(all(vapply(fp$row_styles, function(s) identical(s$colour, "grey50"), logical(1))))
+})
+
+test_that("edit() with row = NULL and panel applies style to all rows in that panel", {
+  df <- data.frame(label = c("A", "B", "C"), est = c(1, 2, 3),
+                   lwr = c(0.5, 1.5, 2.5), upr = c(1.5, 2.5, 3.5))
+  fp <- forest_plot(df) |>
+    add_text("label", header = "Label") |>
+    add_ci("est", "lwr", "upr", header = "HR") |>
+    edit(panel = 1L, fill = "#f0f4ff")
+
+  panel_edits <- fp$cell_edits[[1]]
+  expect_true(all(vapply(panel_edits, function(s) identical(s$fill, "#f0f4ff"), logical(1))))
+  expect_true(all(vapply(fp$row_styles, is.null, logical(1))))
+})
+
+test_that("edit() with row = NULL renders without error", {
+  df <- data.frame(label = c("A", "B"), est = c(1, 2),
+                   lwr = c(0.5, 1.5), upr = c(1.5, 2.5))
+  expect_no_error(
+    forest_plot(df) |>
+      add_text("label", header = "Label") |>
+      add_ci("est", "lwr", "upr", header = "HR") |>
+      edit(panel = "Label", fill = "#f5f5f5") |>
+      fp_render()
+  )
+})
+
+test_that("edit() rejects height without row", {
+  df <- data.frame(label = "A", est = 1, lwr = 0.5, upr = 1.5)
+  fp <- forest_plot(df) |> add_text("label") |> add_ci("est", "lwr", "upr")
+  expect_error(edit(fp, height = 0.8), "`height` cannot be used without")
+})
+
 test_that("fp_save rejects non-fp_plot input", {
   expect_error(fp_save(list(), tempfile()), class = "rlang_error")
 })

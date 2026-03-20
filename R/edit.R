@@ -59,7 +59,7 @@
 
 edit <- function(
   x,
-  row,
+  row = NULL,
   panel = NULL,
   fontface = NULL,
   colour = NULL,
@@ -75,7 +75,16 @@ edit <- function(
   height = NULL
 ) {
   .validate_fp_plot(x)
-  rows <- .validate_rows(row, nrow(x$data))
+
+  n_rows <- nrow(x$data)
+  if (is.null(row)) {
+    if (!is.null(height)) {
+      rlang::abort("`height` cannot be used without specifying `row`.")
+    }
+    rows <- seq_len(n_rows)
+  } else {
+    rows <- .validate_rows(row, n_rows)
+  }
 
   if (!is.null(glyph)) {
     .validate_ci_glyph(glyph, arg = "glyph")
